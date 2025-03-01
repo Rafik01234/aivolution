@@ -5,9 +5,7 @@ import { compare } from "bcryptjs";
 import prisma from "@/lib/db";
 
 export const authOptions: NextAuthOptions = {
-  session: {
-    strategy: "jwt",
-  },
+  session: { strategy: "jwt" },
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -17,25 +15,22 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials.password) {
-          throw new Error("Не указаны email или пароль");
+          throw new Error("Email and password required");
         }
-
-        // Ищем пользователя по email
+        // Поиск пользователя по email
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
         if (!user) {
-          throw new Error("Пользователь не найден");
+          throw new Error("User not found");
         }
-
-        // Сравниваем хешированный пароль
+        // Сравнение паролей
         const isValid = await compare(credentials.password, user.password);
         if (!isValid) {
-          throw new Error("Неверный пароль");
+          throw new Error("Invalid password");
         }
-
-        // Возвращаем пользователя без пароля
-        return { id: user.id, name: user.name, email: user.email };
+        // Возвращаем данные, включая роль
+        return { id: user.id, name: user.name, email: user.email, role: user.role };
       },
     }),
   ],
@@ -44,12 +39,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id;
+        session.user.role = token.role;
       }
       return session;
     },
