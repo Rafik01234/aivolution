@@ -30,6 +30,9 @@ model Course {
   description String
   teacherId   Int
   teacher     User     @relation(fields: [teacherId], references: [id])
+  group       String?  // Группа, для которой предназначен курс
+  videoUrl    String?  // URL видео с содержимым курса
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+

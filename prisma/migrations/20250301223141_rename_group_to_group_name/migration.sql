@@ -5,5 +5,5 @@
 
 */
 -- AlterTable
-ALTER TABLE "User" DROP COLUMN "group",
+ALTER TABLE "User" DROP COLUMN "groupName",
 ADD COLUMN     "groupName" TEXT;
