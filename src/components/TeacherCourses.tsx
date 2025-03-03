@@ -1,14 +1,17 @@
+// src/components/TeacherCourses.tsx
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type Course = {
   id: number;
   title: string;
   description: string;
-  videoUrl?: string | null;
   createdAt: string;
-  groupName: string | null;
+  // Поле group, previewPhoto, etc. тоже могут быть
+  group?: string | null;
+  previewPhoto?: string | null;
 };
 
 type TeacherCoursesProps = {
@@ -18,24 +21,6 @@ type TeacherCoursesProps = {
 export default function TeacherCourses({ groupedCourses }: TeacherCoursesProps) {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [expandedCourses, setExpandedCourses] = useState<Record<number, boolean>>({});
-
-  // Функция для извлечения embed-ссылки (например, из обычного YouTube URL)
-  const getEmbedUrl = (url: string) => {
-    // Если не хотите парсить, можно сразу возвращать url:
-    // return url;
-    // Но ниже пример для YouTube:
-    try {
-      // Ищем video ID в ссылке (например, ?v=..., /embed/..., .be/...)
-      const videoIdMatch = url.match(/(?:\?v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
-      if (videoIdMatch && videoIdMatch[1]) {
-        return `https://www.youtube.com/embed/${videoIdMatch[1]}`;
-      }
-    } catch (error) {
-      console.error("Ошибка извлечения ID видео:", error);
-    }
-    // Если не удалось, возвращаем исходную ссылку (iframe может не работать для других сайтов)
-    return url;
-  };
 
   const toggleGroup = (groupName: string) => {
     setExpandedGroups((prev) => ({
@@ -70,37 +55,31 @@ export default function TeacherCourses({ groupedCourses }: TeacherCoursesProps) 
               <div className="mt-2 ml-4">
                 {groupedCourses[groupName].map((course) => {
                   const expanded = expandedCourses[course.id];
-                  const embedUrl =
-                    course.videoUrl && course.videoUrl !== ""
-                      ? getEmbedUrl(course.videoUrl)
-                      : null;
-
                   return (
                     <div key={course.id} className="mb-4 border-b border-gray-700 pb-2">
                       {/* Заголовок курса – кликабельный */}
-                      <div className="cursor-pointer" onClick={() => toggleCourse(course.id)}>
-                        <h3 className="text-lg font-bold">{course.title}</h3>
+                      <div className="flex justify-between items-center">
+                        <div
+                          className="cursor-pointer"
+                          onClick={() => toggleCourse(course.id)}
+                        >
+                          <h3 className="text-lg font-bold">{course.title}</h3>
+                        </div>
+                        {/* Кнопка "Добавить урок" */}
+                        <Link
+                          href={`/dashboard/teacher/courses/${course.id}/lessons`}
+                          className="text-green-400 hover:underline"
+                        >
+                          Список уроков
+                        </Link>
                       </div>
                       {expanded && (
                         <div className="mt-2 ml-4">
                           <p className="mb-2">{course.description}</p>
-                          {embedUrl ? (
-                            <div className="aspect-video">
-                              <iframe
-                                src={embedUrl}
-                                width="100%"
-                                height="100%"
-                                className="rounded"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              ></iframe>
-                            </div>
-                          ) : (
-                            <p className="text-gray-400">
-                              Видео не указано или не поддерживается.
-                            </p>
-                          )}
+                          <p className="text-sm text-gray-400">
+                            Дата создания: {new Date(course.createdAt).toLocaleDateString()}
+                          </p>
+                          {/* Здесь можно вывести что-то ещё, например previewPhoto */}
                         </div>
                       )}
                     </div>

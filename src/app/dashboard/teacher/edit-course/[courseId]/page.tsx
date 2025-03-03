@@ -1,14 +1,13 @@
-// src/app/dashboard/teacher/edit-course/[id]/page.tsx
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 import EditCourseForm from "@/components/EditCourseForm";
 
-export default async function EditCoursePage({ params }: { params: { id: string } }) {
+export default async function EditCoursePage({ params }: { params: { courseId: string } }) {
   // Ожидаем параметры маршрута перед использованием
-  const { id } = await Promise.resolve(params);
-  const courseId = parseInt(id);
+  const { courseId } = await Promise.resolve(params);
+  const id = parseInt(courseId);
 
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "TEACHER") {
@@ -16,7 +15,7 @@ export default async function EditCoursePage({ params }: { params: { id: string 
   }
 
   const course = await prisma.course.findUnique({
-    where: { id: courseId },
+    where: { id },
   });
 
   // Если курс не найден или не принадлежит текущему учителю, перенаправляем
@@ -24,7 +23,7 @@ export default async function EditCoursePage({ params }: { params: { id: string 
     redirect("/dashboard/teacher/courses");
   }
 
-  // Получаем список уникальных групп, где есть студенты
+  // Получаем список уникальных групп (из пользователей-студентов)
   const groups = await prisma.user.groupBy({
     by: ["groupName"],
     where: { role: "STUDENT", groupName: { not: null } },

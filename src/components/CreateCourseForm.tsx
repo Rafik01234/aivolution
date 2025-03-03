@@ -12,7 +12,7 @@ export default function CreateCourseForm({ groupOptions }: CreateCourseFormProps
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedGroup, setSelectedGroup] = useState(groupOptions[0] || "");
-  const [videoUrl, setVideoUrl] = useState(""); // Новое состояние для видео URL
+  const [previewPhoto, setPreviewPhoto] = useState(""); // URL фото-превью
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -24,7 +24,12 @@ export default function CreateCourseForm({ groupOptions }: CreateCourseFormProps
       const res = await fetch("/api/teacher/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, group: selectedGroup, videoUrl }),
+        body: JSON.stringify({
+          title,
+          description,
+          group: selectedGroup,
+          previewPhoto,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -33,8 +38,9 @@ export default function CreateCourseForm({ groupOptions }: CreateCourseFormProps
         setMessage("Курс успешно создан");
         setTitle("");
         setDescription("");
-        setVideoUrl("");
-        // router.push("/dashboard/teacher/courses"); // При необходимости редирект
+        setPreviewPhoto("");
+        // При необходимости, можно перенаправить:
+        // router.push("/dashboard/teacher/courses");
       }
     } catch (err: any) {
       setError(err.message || "Ошибка при создании курса");
@@ -65,11 +71,11 @@ export default function CreateCourseForm({ groupOptions }: CreateCourseFormProps
           />
         </div>
         <div>
-          <label className="block mb-1">Видео URL:</label>
+          <label className="block mb-1">Фото-превью (URL):</label>
           <input
             type="url"
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
+            value={previewPhoto}
+            onChange={(e) => setPreviewPhoto(e.target.value)}
             placeholder="https://..."
             className="w-full p-2 border rounded bg-gray-800 text-white"
           />

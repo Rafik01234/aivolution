@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
   }
   
-  const { title, description, group, videoUrl } = await request.json();
+  const { title, description, group, previewPhoto } = await request.json();
   
   try {
     const newCourse = await prisma.course.create({
@@ -18,8 +18,8 @@ export async function POST(request: Request) {
         title,
         description,
         teacherId: session.user.id,
-        group,      // Сохраняем выбранную группу
-        videoUrl,   // Сохраняем URL видео (если указано)
+        group,         // Значение группы для курса
+        previewPhoto,  // URL фото-превью курса
       },
     });
     return NextResponse.json({ course: newCourse });
