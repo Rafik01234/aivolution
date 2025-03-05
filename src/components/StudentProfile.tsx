@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
@@ -5,19 +6,19 @@ import { useState, useEffect, FormEvent } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
+import { FaUserCircle } from "react-icons/fa";
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function StudentProfile() {
   const { data: session, status } = useSession();
   const userId = session?.user?.id;
-  
-  // Получаем профиль студента через SWR по его ID
+
   const { data: profile, error, mutate } = useSWR(
     userId ? `/api/student/get-profile?id=${userId}` : null,
     fetcher
   );
 
-  // Состояния для всех полей профиля
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [groupName, setGroupName] = useState("");
@@ -29,7 +30,6 @@ export default function StudentProfile() {
   const [message, setMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Устанавливаем значения полей после получения профиля
   useEffect(() => {
     if (profile) {
       setName(profile.name);
@@ -58,119 +58,106 @@ export default function StudentProfile() {
         setFormError(data.message || "Ошибка при обновлении профиля");
       } else {
         setMessage("Профиль успешно обновлен");
-        mutate(); // Обновляем данные профиля после успешного обновления
+        mutate();
       }
     } catch (err: any) {
       setFormError(err.message || "Ошибка при обновлении профиля");
     }
   };
 
-  if (status === "loading") return <div>Загрузка...</div>;
-  if (error) return <div>Ошибка загрузки профиля</div>;
-  if (!profile) return <div>Нет данных профиля</div>;
+  if (status === "loading") return <div className="min-h-screen bg-gray-900 text-white p-6">Загрузка...</div>;
+  if (error) return <div className="min-h-screen bg-gray-900 text-white p-6">Ошибка загрузки профиля</div>;
+  if (!profile) return <div className="min-h-screen bg-gray-900 text-white p-6">Нет данных профиля</div>;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-3">
-      {/* Header */}
-      <header className="bg-gray-800 shadow p-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Student Dashboard</h1>
-          <p className="text-gray-300">Профиль студента</p>
+    <header className="bg-gray-800 shadow p-4 flex justify-between items-center ">
+    <div>
+        <h1 className="text-2xl font-bold">AIvolution</h1>
+        <p className="text-gray-300">Мои курсы</p>
+      </div>
+    <div className="flex items-center space-x-4">
+        <Link href="/dashboard/student" className="text-gray-300 hover:underline">
+          Главная
+        </Link>
+        <Link href="/dashboard/student/my-courses" className="text-gray-300 hover:underline">
+          Мои курсы
+        </Link>
+        <Link href="/dashboard/student/profile">
+          {photo ? (
+            <img src={photo} alt="Профиль" className="w-10 h-10 rounded-full object-cover cursor-pointer" />
+          ) : (
+            <FaUserCircle className="text-gray-300 text-3xl" />
+          )}
+        </Link>
+        <LogoutButton />
         </div>
-        <div className="flex items-center space-x-4">
-          <Link href="/dashboard/student" className="text-gray-300 hover:underline">
-            Главная
-          </Link>
-          <Link href="/dashboard/student/profile" className="text-gray-300 hover:underline">
-            Профиль
-          </Link>
-          <Link href="/dashboard/student/my-courses" className="text-gray-300 hover:underline">
-            Мои курсы
-          </Link>
-          <LogoutButton />
+    </header>
+
+      <div className="p-6">
+        <div className="flex flex-col items-center mb-6">
+          {photo ? (
+            <img src={photo} alt="Профиль" className="w-32 h-32 rounded-full object-cover border-4 border-gray-700" />
+          ) : (
+            <FaUserCircle className="w-32 h-32 text-gray-500" />
+          )}
+          <label className="mt-2 text-blue-400 cursor-pointer">
+            Изменить фото
+            <input type="file" className="hidden" onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => setPhoto(reader.result as string);
+                reader.readAsDataURL(file);
+              }
+            }} />
+          </label>
         </div>
-      </header>
-      
-      <form onSubmit={handleSubmit} className="max-w-lg space-y-4 mt-5">
-        <div>
-          <label className="block mb-1">Имя:</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 border rounded bg-gray-800 text-white"
-            required
-          />
-        </div>
-        <div>
-          <label className="block mb-1">Email:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border rounded bg-gray-800 text-white"
-            required
-          />
-        </div>
-        <div>
-          <label className="block mb-1">Группа:</label>
-          <input
-            type="text"
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            className="w-full p-2 border rounded bg-gray-800 text-white"
-          />
-        </div>
-        <div>
-          <label className="block mb-1">О себе (Bio):</label>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            className="w-full p-2 border rounded bg-gray-800 text-white"
-          />
-        </div>
-        <div>
-          <label className="block mb-1">Телефон:</label>
-          <input
-            type="text"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full p-2 border rounded bg-gray-800 text-white"
-          />
-        </div>
-        <div>
-          <label className="block mb-1">Специальность:</label>
-          <input
-            type="text"
-            value={major}
-            onChange={(e) => setMajor(e.target.value)}
-            className="w-full p-2 border rounded bg-gray-800 text-white"
-          />
-        </div>
-        <div>
-          <label className="block mb-1">Год обучения:</label>
-          <input
-            type="text"
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            className="w-full p-2 border rounded bg-gray-800 text-white"
-          />
-        </div>
-        <div>
-          <label className="block mb-1">URL фотографии:</label>
-          <input
-            type="url"
-            value={photo}
-            onChange={(e) => setPhoto(e.target.value)}
-            className="w-full p-2 border rounded bg-gray-800 text-white"
-          />
-        </div>
-        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-          Обновить профиль
-        </button>
-        {formError && <p className="text-red-500 mt-2">{formError}</p>}
-        {message && <p className="text-green-500 mt-2">{message}</p>}
-      </form>
+
+        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block mb-1">Имя:</label>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full p-2 border rounded bg-gray-800 text-white" required />
+              </div>
+              <div>
+                <label className="block mb-1">Email:</label>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border rounded bg-gray-800 text-white" required />
+              </div>
+              <div>
+                <label className="block mb-1">Группа:</label>
+                <input type="text" value={groupName} onChange={(e) => setGroupName(e.target.value)} className="w-full p-2 border rounded bg-gray-800 text-white" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block mb-1">О себе:</label>
+                <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="w-full p-2 border rounded bg-gray-800 text-white" />
+              </div>
+              <div>
+                <label className="block mb-1">Телефон:</label>
+                <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full p-2 border rounded bg-gray-800 text-white" />
+              </div>
+              <div>
+                <label className="block mb-1">Специальность:</label>
+                <input type="text" value={major} onChange={(e) => setMajor(e.target.value)} className="w-full p-2 border rounded bg-gray-800 text-white" />
+              </div>
+              <div>
+                <label className="block mb-1">Год обучения:</label>
+                <input type="text" value={year} onChange={(e) => setYear(e.target.value)} className="w-full p-2 border rounded bg-gray-800 text-white" />
+              </div>
+            </div>
+          </div>
+          <div className="mt-6 text-center">
+            <button type="submit" className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-green-500 cursor-pointer">
+              Обновить профиль
+            </button>
+          </div>
+          {formError && <p className="text-red-500 mt-2 text-center">{formError}</p>}
+          {message && <p className="text-green-500 mt-2 text-center">{message}</p>}
+        </form>
+      </div>
     </div>
   );
 }

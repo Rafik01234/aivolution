@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import InfiniteCoursesCarousel from "@/components/InfiniteCoursesCarousel";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
-
+import { FaUserCircle } from "react-icons/fa";
 export default async function StudentDashboard() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "STUDENT") {
@@ -39,23 +39,33 @@ export default async function StudentDashboard() {
     select: { courseId: true },
   });
   const enrolledCourseIds = enrollments.map((e) => e.courseId);
+  // Получаем фото профиля студента
+const student = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { photo: true },
+  });
+  
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-3">
       {/* Шапка */}
       <header className="bg-gray-800 text-white p-4 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Student Dashboard</h1>
+          <h1 className="text-2xl font-bold">AIvolution</h1>
           <p className="text-gray-300">
             Добро пожаловать, {session.user?.name}!
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          <Link href="/dashboard/student/profile" className="text-gray-300 hover:underline">
-            Профиль
-          </Link>
-          <Link href="/dashboard/student/my-courses" className="text-gray-300 hover:underline">
+        <Link href="/dashboard/student/my-courses" className="text-gray-300 hover:underline">
             Мои курсы
+          </Link>
+        <Link href="/dashboard/student/profile">
+          {student?.photo ? (
+            <img src={student.photo} alt="Профиль" className="w-10 h-10 rounded-full object-cover cursor-pointer" />
+          ): (
+              <FaUserCircle className="text-gray-300 text-3xl" />
+            )}
           </Link>
           <LogoutButton />
         </div>

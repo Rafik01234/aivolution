@@ -40,5 +40,10 @@ export default async function StudentCourseDetailPage({ params }: { params: { co
     videoUrl: lesson.videoUrl,
   }));
 
-  return <StudentCoursePageClient course={courseData} lessons={lessonsData} />;
+  // Получаем фото профиля студента
+  const student = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { photo: true },
+  });
+  return <StudentCoursePageClient course={courseData} lessons={lessonsData}  profilePhoto={student?.photo || null} />;
 }

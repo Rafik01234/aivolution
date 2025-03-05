@@ -4,34 +4,33 @@ import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 import StudentLessonDetail from "@/components/StudentLessonDetail";
 
-export default async function StudentLessonDetailPage({ params }: { params: { courseId: string; lessonId: string } }) {
+export default async function LessonPage({ params }: { params: { lessonId: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "STUDENT") {
     redirect("/auth/login");
   }
-  
-  const courseId = parseInt(params.courseId, 10);
-  const lessonId = parseInt(params.lessonId, 10);
-  
-  // Проверяем, что студент записан на этот курс
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { studentId: session.user.id, courseId },
+
+  // Получаем данные урока
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: parseInt(params.lessonId) },
     include: { course: true },
   });
-  if (!enrollment) {
-    redirect("/dashboard/student/my-courses");
+
+  if (!lesson) {
+    return <div className="text-white">Урок не найден</div>;
   }
-  
-  // Получаем урок
-  const lesson = await prisma.lesson.findUnique({
-    where: { id: lessonId },
+
+  // Получаем фото профиля студента
+  const student = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { photo: true },
   });
-  
-  if (!lesson || lesson.courseId !== courseId) {
-    redirect(`/dashboard/student/my-courses/${courseId}`);
-  }
-  
-  const course = enrollment.course;
-  
-  return <StudentLessonDetail course={course} lesson={lesson} />;
+
+  return (
+    <StudentLessonDetail 
+      course={lesson.course} 
+      lesson={lesson} 
+      profilePhoto={student?.photo || null} 
+    />
+  );
 }
